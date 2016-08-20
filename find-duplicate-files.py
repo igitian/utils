@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
-import os, hashlib, stat
+import os, hashlib, stat, sys, getopt
 from os.path import join, getsize, islink
 
+
 # returns a list of files with full path
-def get_files_list(root):
+def get_files_list(path):
     files_list = []
-    walklist = os.walk(root)
+    walklist = os.walk(path)
     
-    for root, dirs, files in walklist:
+    for path, dirs, files in walklist:
         for file in files:
-            files_list.append(join(root, file))
+            files_list.append(join(path, file))
     return files_list
 
 
@@ -27,7 +28,7 @@ def get_md5(file):
 
 
 # returns a list of hashed files with sizes in bytes
-def get_hashed_files_list(file_list):
+def get_hashed_files_list(files_list):
     hashed_files_list = []
     for file in files_list:
         if not islink(file) and not is_socket(file):
@@ -61,7 +62,7 @@ def get_duplicate_hashes(hashed_files_list):
 
 
 # returns a list of duplicate hashed files
-def get_duplicate_hashed_files_list(duplicate_hashes_list):
+def get_duplicate_hashed_files_list(duplicate_hashes_list, hashed_files_list):
     duplicate_hashed_files_list = []
     for hash in duplicate_hashes_list:
         for hashed_file in hashed_files_list:
@@ -75,19 +76,42 @@ def sort_hashed_files(duplicate_hashed_files_list):
     sorted_list = duplicate_hashed_files_list.sort(reverse=True)
     return sorted_list
 
+
 # return a list of identical directories
 def get_identical_dirs(duplicate_hashed_files_list):
     pass
 
 
-# make the calls, can later be the controller function
-files_list = get_files_list('.')
-hashed_files_list = get_hashed_files_list(files_list)
-duplicate_hashes_list = get_duplicate_hashes(hashed_files_list)
-duplicate_hashed_files_list = get_duplicate_hashed_files_list(duplicate_hashes_list)
-#duplicate_hashed_files_list = sort_hashed_files(duplicate_hashed_files_list)
-sorted_list = sorted(duplicate_hashed_files_list, key=lambda entry: entry[0], reverse=True)
+def main(argv):
 
-# print out last list
-for i in sorted_list:
-    print i[0], i[1], i[2]
+    path = ''
+
+    # process the arguments
+    try:
+        opts, args = getopt.getopt(argv, 'p:', ['path='])
+    except getopt.GetoptError:
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt in ('-p', '--path'):
+            path = arg
+
+    if path == '':
+        print "Please specify --path"
+        sys.exit(2)
+
+    # make the calls, can later be the controller function
+    files_list = get_files_list(path)
+    hashed_files_list = get_hashed_files_list(files_list)
+    duplicate_hashes_list = get_duplicate_hashes(hashed_files_list)
+    duplicate_hashed_files_list = get_duplicate_hashed_files_list(duplicate_hashes_list, hashed_files_list)
+    #duplicate_hashed_files_list = sort_hashed_files(duplicate_hashed_files_list)
+    sorted_list = sorted(duplicate_hashed_files_list, key=lambda entry: entry[0], reverse=True)
+
+    # print out last list
+    for i in sorted_list:
+        print i[0], i[1], i[2]
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
