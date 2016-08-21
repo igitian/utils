@@ -82,19 +82,35 @@ def get_identical_dirs(duplicate_hashed_files_list):
     pass
 
 
+# output the results
+def output(sorted_list, output_file):
+    # write results to a file
+    if output_file:
+        with open(output_file, 'w') as f:
+            for i in sorted_list:
+                f.write('%s %s %s\n' % (i[0], i[1], i[2]) )
+    # print output to sdtout
+    else:
+        for i in sorted_list:
+            print i[0], i[1], i[2]
+
+
 def main(argv):
 
     path = ''
+    output_file = ''
 
     # process the arguments
     try:
-        opts, args = getopt.getopt(argv, 'p:', ['path='])
+        opts, args = getopt.getopt(argv, 'p:o:', ['path=', 'output='])
     except getopt.GetoptError:
         sys.exit(2)
 
     for opt, arg in opts:
         if opt in ('-p', '--path'):
             path = arg
+        if opt in ('-o', '--output'):
+            output_file = arg
 
     if path == '':
         print "Please specify --path"
@@ -107,10 +123,7 @@ def main(argv):
     duplicate_hashed_files_list = get_duplicate_hashed_files_list(duplicate_hashes_list, hashed_files_list)
     #duplicate_hashed_files_list = sort_hashed_files(duplicate_hashed_files_list)
     sorted_list = sorted(duplicate_hashed_files_list, key=lambda entry: entry[0], reverse=True)
-
-    # print out last list
-    for i in sorted_list:
-        print i[0], i[1], i[2]
+    output(sorted_list, output_file)
 
 
 if __name__ == '__main__':
